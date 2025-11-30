@@ -1,5 +1,6 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
+import { getRandomItem, randomSleep } from '../modules/utils.js';
 
 const BASE_URL = __ENV.BASE_URL || 'https://test.k6.io';
 
@@ -21,18 +22,31 @@ export const options = {
   },
 };
 
-// 3. SCENARIUSZ TESTOWY (MAIN FUNCTION)
-// To jest to, co wykonuje każdy wirtualny użytkownik (VU)
-export default function () {
-  // Wykonujemy zapytanie
-  const res = http.get(BASE_URL);
+// Lista podstron dostępnych na test.k6.io
+const PAGES = [
+    '/contacts.php',
+    '/news.php',
+    '/flip_coin.php',
+    '/browser.php'
+];
 
-  // 4. ASERCJE (CHECKS)
-  // Sprawdzamy, czy odpowiedź jest poprawna (nie przerywa testu, tylko raportuje)
+export default function () {
+  // 1. Losujemy podstronę używając naszej funkcji z modułu
+  const randomPage = getRandomItem(PAGES);
+  
+  // 2. Budujemy pełny URL
+  // Używamy "backticks" (`) do łączenia stringów - to standard w JS
+  const currentUrl = `${BASE_URL}${randomPage}`;
+
+  // Logujemy do konsoli, żebyś widział, że to działa (nie rób tego przy dużym teście!)
+  console.log(`VU ${__VU} odwiedza: ${randomPage}`);
+
+  const res = http.get(currentUrl);
+
   check(res, {
     'status is 200': (r) => r.status === 200,
   });
 
-  // Symulacja myślenia użytkownika (pacing) - 1 sekunda przerwy
-  sleep(1);
+  // 3. Losowy czas myślenia (1-3 sekundy) z naszego modułu
+  sleep(randomSleep(1, 3));
 }
