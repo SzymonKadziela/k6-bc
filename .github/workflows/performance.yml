@@ -1,0 +1,43 @@
+name: Performance Testing CI
+
+# Kiedy test ma się uruchomić?
+on:
+  push:
+    branches: [ "main" ] # Uruchom na push do gałęzi main
+  pull_request:
+    branches: [ "main" ] # Uruchom na Pull Requesty do main
+  workflow_dispatch:      # Dodatkowa opcja: uruchamianie ręczne z GUI GitHub
+
+jobs:
+  performance_test:
+    name: Uruchomienie Testu k6
+    runs-on: ubuntu-latest # Testy puszczamy na maszynie wirtualnej Linuxa
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4 # Pobranie kodu z Twojego repozytorium
+
+      # 1. Instalacja k6
+      - name: Install k6
+        uses: grafana/k6-action@v0.2.0
+
+      # 2. Uruchomienie testu
+      # Używamy zmiennej środowiskowej z Tygodnia 1!
+      - name: Run k6 Load Test
+        run: k6 run tests/smoke-test.js
+        env:
+          # Podajemy URL, który ma być użyty przez skrypt
+          BASE_URL: ${{ vars.DEFAULT_BASE_URL || 'https://test.k6.io' }}
+
+      # 3. Analiza wyniku (dla Seniora to kluczowe)
+      # Ten krok jest opcjonalny, ale BARDZO przydatny!
+      - name: Check K6 Results
+        if: always() # Uruchomi się zawsze, nawet jeśli test zawiedzie
+        run: |
+          # Sprawdzamy exit code z k6. Jeśli test nie przeszedł Thresholds (SLA), 
+          # to k6 zwraca błąd (exit code 1), a cały pipeline zawodzi.
+          echo "K6 test completed with exit code $?"
+          if [ $? -ne 0 ]; then
+            echo "Test FAILED due to Threshold/SLA breach."
+            exit 1
+          fi
