@@ -17,30 +17,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4 
         
-      # KROK 1: POBIERANIE I INSTALACJA KLUCZA GPG w nowoczesny sposób
-      - name: Add K6 GPG Key and Repository
-        run: |
-          # Pobieramy klucz GPG za pomocą curl i umieszczamy go w zaufanym katalogu
-          sudo curl -fsSL https://dl.k6.io/keys/k6-archive.key | sudo gpg --dearmor -o /etc/apt/keyrings/k6-archive-keyring.gpg
-          
-          # Dodajemy repozytorium k6 używając nowoczesnej składni
-          echo "deb [signed-by=/etc/apt/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          
-      # KROK 2: Aktualizacja listy pakietów
-      - name: Update apt lists
-        run: sudo apt-get update
-
-      # KROK 3: Instalacja k6
+      # KROK 1: INSTALACJA K6 (Najprostsza i najbardziej stabilna metoda)
       - name: Install k6
-        run: sudo apt-get install k6
-
-      # KROK 4: Uruchomienie testu
+        run: sudo sh -c "echo 'deb [trusted=yes] https://dl.k6.io/deb stable main' > /etc/apt/sources.list.d/k6.list && apt update && apt install k6"
+        
+      # KROK 2: Uruchomienie testu
       - name: Run k6 Load Test
         run: k6 run ${{ github.workspace }}/tests/smoke-test.js
         env:
           BASE_URL: ${{ vars.DEFAULT_BASE_URL || 'https://test.k6.io' }}
 
-      # KROK 5: Sprawdzenie wyniku (Niezmienne)
+      # KROK 3: Sprawdzenie wyniku 
       - name: Check K6 Results
         if: always()
         run: |
