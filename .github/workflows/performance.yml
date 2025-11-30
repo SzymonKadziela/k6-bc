@@ -17,28 +17,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4 # Pobranie kodu z Twojego repozytorium
 
-      # 1. Instalacja k6
+      # 1. Instalacja k6 za pomocą komendy
       - name: Install k6
-        uses: grafana/k6-action@v0.2.0
+        run: sudo apt-get install k6 # Szybka instalacja na maszynie Ubuntu
 
       # 2. Uruchomienie testu
-      # Używamy zmiennej środowiskowej z Tygodnia 1!
+      # Użyjemy pełnej ścieżki
       - name: Run k6 Load Test
-        run: k6 run tests/smoke-test.js
-        # To jest ten kluczowy dodatek, który zapewnia, że uruchamiamy k6 
-        # z katalogu głównego, skąd widoczny jest folder 'tests/'
-        working-directory: ${{ github.workspace }}
+        run: k6 run ${{ github.workspace }}/tests/smoke-test.js
         env:
-          # Podajemy URL, który ma być użyty przez skrypt
           BASE_URL: ${{ vars.DEFAULT_BASE_URL || 'https://test.k6.io' }}
 
-      # 3. Analiza wyniku (dla Seniora to kluczowe)
-      # Ten krok jest opcjonalny, ale BARDZO przydatny!
+      # 3. Sprawdzenie wyniku (opcjonalne, ale dobre)
       - name: Check K6 Results
-        if: always() # Uruchomi się zawsze, nawet jeśli test zawiedzie
+        if: always()
         run: |
-          # Sprawdzamy exit code z k6. Jeśli test nie przeszedł Thresholds (SLA), 
-          # to k6 zwraca błąd (exit code 1), a cały pipeline zawodzi.
           echo "K6 test completed with exit code $?"
           if [ $? -ne 0 ]; then
             echo "Test FAILED due to Threshold/SLA breach."
