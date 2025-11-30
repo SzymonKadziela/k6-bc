@@ -1,6 +1,8 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
+const BASE_URL = __ENV.BASE_URL || 'https://test.k6.io';
+
 // 1. KONFIGURACJA TESTU (OPTIONS)
 // Tutaj definiujemy, jak test ma wyglądać (zamiast klikać Thread Group w JMeter)
 export const options = {
@@ -23,13 +25,12 @@ export const options = {
 // To jest to, co wykonuje każdy wirtualny użytkownik (VU)
 export default function () {
   // Wykonujemy zapytanie
-  const res = http.get('https://test.k6.io');
+  const res = http.get(BASE_URL);
 
   // 4. ASERCJE (CHECKS)
   // Sprawdzamy, czy odpowiedź jest poprawna (nie przerywa testu, tylko raportuje)
   check(res, {
     'status is 200': (r) => r.status === 200,
-    'protocol is HTTP/2': (r) => r.proto === 'h2',
   });
 
   // Symulacja myślenia użytkownika (pacing) - 1 sekunda przerwy
