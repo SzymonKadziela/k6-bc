@@ -25,6 +25,9 @@ jobs:
       # Używamy zmiennej środowiskowej z Tygodnia 1!
       - name: Run k6 Load Test
         run: k6 run tests/smoke-test.js
+        # To jest ten kluczowy dodatek, który zapewnia, że uruchamiamy k6 
+        # z katalogu głównego, skąd widoczny jest folder 'tests/'
+        working-directory: ${{ github.workspace }}
         env:
           # Podajemy URL, który ma być użyty przez skrypt
           BASE_URL: ${{ vars.DEFAULT_BASE_URL || 'https://test.k6.io' }}
