@@ -1,0 +1,44 @@
+version: '3.7'
+
+services:
+  # 1. Elasticsearch (Baza danych dla metryk)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.15
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m # Ograniczamy zużycie RAM
+    ports:
+      - 9200:9200
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+  # 2. Kibana (Panel do wizualizacji i przeglądania APM)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.15
+    container_name: kibana
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    environment:
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+
+  # 3. APM Server (Zbiera dane ze skonteneryzowanych aplikacji)
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:7.17.15
+    container_name: apm-server
+    command: >
+      apm-server -e
+        -E apm-server.host=0.0.0.0
+        -E apm-server.elasticsearch.hosts=["http://elasticsearch:9200"]
+    ports:
+      - 8200:8200 # Kluczowy port do odbierania danych APM od aplikacji
+    depends_on:
+      - elasticsearch
+
+# Zewnętrzne woluminy do trwałości danych
+volumes:
+  esdata:
+    driver: local

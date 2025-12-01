@@ -1,52 +1,51 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
+// Importujemy funkcje z modułu, który stworzyliśmy
 import { getRandomItem, randomSleep } from '../modules/utils.js';
 
-const BASE_URL = __ENV.BASE_URL || 'https://test.k6.io';
+// Adres API jest pobierany ze zmiennej środowiskowej (CLI lub GitHub Actions)
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000'; 
+
+// Lista podstron (dla symulacji, w tym przypadku używamy tylko jednego endpointu /api/slow)
+const API_ENDPOINTS = [
+    '/api/slow',
+];
 
 // 1. KONFIGURACJA TESTU (OPTIONS)
-// Tutaj definiujemy, jak test ma wyglądać (zamiast klikać Thread Group w JMeter)
 export const options = {
-  // Definiujemy etapy testu (Ramp-up, Hold, Ramp-down)
   stages: [
-    { duration: '5s', target: 5 },  // Rozgrzewka: wejdź na 5 użytkowników w 5 sek
+    { duration: '5s', target: 5 },  // Rozgrzewka: wejdź na 5 użytkowników w 5 sek
     { duration: '10s', target: 5 }, // Utrzymanie: trzymaj 5 użytkowników przez 10 sek
-    { duration: '5s', target: 0 },  // Wygaszanie: zejdź do 0 w 5 sek
+    { duration: '5s', target: 0 },  // Wygaszanie: zejdź do 0 w 5 sek
   ],
 
-  // 2. KRYTERIA SUKCESU (THRESHOLDS) - To jest "Quality Gate"
-  // Jeśli te warunki nie zostaną spełnione, k6 zwróci błąd (exit code 1)
+  // 2. KRYTERIA SUKCESU (THRESHOLDS) - CELOWO Ustawiamy nisko, aby test FAILED!
   thresholds: {
-    http_req_duration: ['p(95)<500'], // 95% zapytań musi być szybszych niż 500ms
-    http_req_failed: ['rate<0.01'],   // Mniej niż 1% błędów
+    // Wiemy, że API zajmuje 1500ms, więc 1000ms MUSI zwrócić błąd (exit code 1)
+    http_req_duration: ['p(95)<1000'], 
+    http_req_failed: ['rate<0.01'],
   },
 };
 
-// Lista podstron dostępnych na test.k6.io
-const PAGES = [
-    '/contacts.php',
-    '/news.php',
-    '/flip_coin.php',
-    '/browser.php'
-];
-
+// 3. SCENARIUSZ TESTOWY (MAIN FUNCTION)
 export default function () {
-  // 1. Losujemy podstronę używając naszej funkcji z modułu
-  const randomPage = getRandomItem(PAGES);
+  // Losujemy endpoint z naszej listy
+  const randomEndpoint = getRandomItem(API_ENDPOINTS);
   
-  // 2. Budujemy pełny URL
-  // Używamy "backticks" (`) do łączenia stringów - to standard w JS
-  const currentUrl = `${BASE_URL}${randomPage}`;
+  // Budujemy pełny URL
+  const currentUrl = `${BASE_URL}${randomEndpoint}`;
 
-  // Logujemy do konsoli, żebyś widział, że to działa (nie rób tego przy dużym teście!)
-  console.log(`VU ${__VU} odwiedza: ${randomPage}`);
+  // Logujemy do konsoli, żeby wiedzieć, co testujemy
+  console.log(`VU ${__VU} odwiedza: ${randomEndpoint}`);
 
+  // Wykonujemy zapytanie do aplikacji z wąskim gardłem
   const res = http.get(currentUrl);
 
+  // 4. ASERCJE (CHECKS)
   check(res, {
     'status is 200': (r) => r.status === 200,
   });
 
-  // 3. Losowy czas myślenia (1-3 sekundy) z naszego modułu
+  // Losowy czas myślenia (pacing) - 1-3 sekundy
   sleep(randomSleep(1, 3));
 }
