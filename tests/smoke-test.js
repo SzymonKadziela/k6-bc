@@ -1,12 +1,10 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-// Importujemy funkcje z modułu, który stworzyliśmy
 import { getRandomItem, randomSleep } from '../modules/utils.js';
 
 // Adres API jest pobierany ze zmiennej środowiskowej (CLI lub GitHub Actions)
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000'; 
 
-// Lista podstron (dla symulacji, w tym przypadku używamy tylko jednego endpointu /api/slow)
 const API_ENDPOINTS = [
     '/api/slow',
 ];
@@ -21,7 +19,6 @@ export const options = {
 
   // 2. KRYTERIA SUKCESU (THRESHOLDS) - CELOWO Ustawiamy nisko, aby test FAILED!
   thresholds: {
-    // Wiemy, że API zajmuje 1500ms, więc 1000ms MUSI zwrócić błąd (exit code 1)
     http_req_duration: ['p(95)<4000'], 
     http_req_failed: ['rate<0.9'],
   },
