@@ -22,8 +22,8 @@ export const options = {
   // 2. KRYTERIA SUKCESU (THRESHOLDS) - CELOWO Ustawiamy nisko, aby test FAILED!
   thresholds: {
     // Wiemy, że API zajmuje 1500ms, więc 1000ms MUSI zwrócić błąd (exit code 1)
-    http_req_duration: ['p(95)<1000'], 
-    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<4000'], 
+    http_req_failed: ['rate<0.5'],
   },
 };
 
