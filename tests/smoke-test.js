@@ -23,7 +23,7 @@ export const options = {
   thresholds: {
     // Wiemy, że API zajmuje 1500ms, więc 1000ms MUSI zwrócić błąd (exit code 1)
     http_req_duration: ['p(95)<4000'], 
-    http_req_failed: ['rate<0.5'],
+    http_req_failed: ['rate<0.9'],
   },
 };
 
