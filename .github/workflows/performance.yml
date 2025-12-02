@@ -17,22 +17,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4 
         
-      # KROK 1: INSTALACJA K6 (Najprostsza i najbardziej stabilna metoda)
+      # KROK 1: INSTALACJA K6 (Najbardziej stabilna metoda)
       - name: Install k6
         run: sudo sh -c "echo 'deb [trusted=yes] https://dl.k6.io/deb stable main' > /etc/apt/sources.list.d/k6.list && apt update && apt install k6"
         
       # KROK 2: Uruchomienie testu
       - name: Run k6 Load Test
-        run: k6 run ${{ github.workspace }}/tests/smoke-test.js
+        run: k6 run tests/smoke-test.js
         env:
-          BASE_URL: ${{ vars.DEFAULT_BASE_URL || 'https://test.k6.io' }}
+          # WAŻNE: W CI/CD używamy domyślnego publicznego adresu (test.k6.io)
+          BASE_URL: ${{ vars.DEFAULT_BASE_URL || 'https://test.k6.io' }} 
 
-      # KROK 3: Sprawdzenie wyniku 
+      # KROK 3: Sprawdzenie wyniku (Jeśli k6 zwróci błąd progu, GitHub Actions zwróci błąd)
       - name: Check K6 Results
         if: always()
-        run: |
-          echo "K6 test completed with exit code $?"
-          if [ $? -ne 0 ]; then
-            echo "Test FAILED due to Threshold/SLA breach."
-            exit 1
-          fi
+        run: echo "Test zakończony."
