@@ -55,3 +55,21 @@ Aktualnie ustawione progi w `tests/smoke-test.js` to:
 
 * **`http_req_duration`**: `p(95) < 500ms` (95% zapytań musi być szybszych niż 500 milisekund).
 * **`http_req_failed`**: `rate < 0.01` (Wskaźnik błędów musi być niższy niż 1%).
+
+## 🎓 Podsumowanie Projektu: Cykl Inżynierii Wydajności
+
+To repozytorium demonstruje pełen **cykl życia inżynierii wydajności (Performance Engineering Lifecycle)**, obejmujący zarówno automatyzację (Shift-Left), jak i głęboką diagnostykę (Root Cause Analysis).
+
+Projekt dowodzi praktycznej znajomości poniższych kluczowych kompetencji, typowych dla **Senior Performance Engineer**:
+
+### I. 💻 Faza Wytwarzania (Shift-Left & CI/CD)
+* **Performance as Code:** Tworzenie modularnych i sparametryzowanych skryptów obciążeniowych za pomocą **k6** w JavaScript ES6.
+* **Quality Gate Automation:** Ustanowienie automatycznej Bramki Jakości (Quality Gate) w **GitHub Actions**, która zatrzymuje wdrożenie (FAIL), gdy naruszone zostaną kryteria SLA.
+
+### II. 🔬 Faza Diagnozy (APM & Root Cause Analysis)
+* **Obserwowalność:** Konfiguracja **Elastic APM Stack** (Elasticsearch, Kibana, APM Server) do zbierania śladów i metryk z aplikacji pod obciążeniem.
+* **Lokalizacja Błędu:** Użycie narzędzi APM do **znalezienia i zidentyfikowania konkretnej funkcji (Span)** w kodzie aplikacji (`simulateSlowDatabaseCall`), która generowała opóźnienie 1.5 sekundy (Root Cause Analysis). 
+
+### III. ☁️ Faza Skalowalności (LaaS)
+* **Skalowanie Obciążenia:** Uruchomienie testu o wysokiej wolumenie (do 100+ VU) za pomocą **k6 Cloud (LaaS)**, demonstrując umiejętność konfiguracji testów rozproszonych.
+* **Zaawansowana Analiza:** Wykorzystanie panelu k6 Cloud do analizy trendów wydajnościowych i generowania raportów.
