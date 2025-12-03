@@ -1,48 +1,87 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+// POPRAWKA TUTAJ: group jest wewnątrz nawiasów klamrowych
+import { check, sleep, group } from 'k6'; 
+import { SharedArray } from 'k6/data';
 import { getRandomItem, randomSleep } from '../modules/utils.js';
 
-// Adres API jest pobierany ze zmiennej środowiskowej (CLI lub GitHub Actions)
+// Wczytywanie danych z pliku (symulacja)
+const users = new SharedArray('users', function () {
+  return [
+    { user: 'user1', password: 'pass1' },
+    { user: 'user2', password: 'pass2' },
+    { user: 'user3', password: 'pass3' }
+  ];
+});
+
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000'; 
 
-const API_ENDPOINTS = [
-    '/api/slow',
-];
-
-// 1. KONFIGURACJA TESTU (OPTIONS)
 export const options = {
   stages: [
-    { duration: '5s', target: 5 },  // Rozgrzewka: wejdź na 5 użytkowników w 5 sek
-    { duration: '10s', target: 5 }, // Utrzymanie: trzymaj 5 użytkowników przez 10 sek
-    { duration: '5s', target: 0 },  // Wygaszanie: zejdź do 0 w 5 sek
+    { duration: '5s', target: 5 },
+    { duration: '10s', target: 5 },
+    { duration: '5s', target: 0 },
   ],
-
-  // 2. KRYTERIA SUKCESU (THRESHOLDS) - CELOWO Ustawiamy nisko, aby test FAILED!
   thresholds: {
-    http_req_duration: ['p(95)<4000'], 
-    http_req_failed: ['rate<0.9'],
+    http_req_duration: ['p(99)<4000'], 
+    http_req_failed: ['rate<0.1'],
   },
 };
 
-// 3. SCENARIUSZ TESTOWY (MAIN FUNCTION)
 export default function () {
-  // Losujemy endpoint z naszej listy
-  const randomEndpoint = getRandomItem(API_ENDPOINTS);
-  
-  // Budujemy pełny URL
-  const currentUrl = `${BASE_URL}${randomEndpoint}`;
+    // Pobieramy dane dla konkretnego VU
+    const userData = users[__VU % users.length];
+    let authToken = null;
 
-  // Logujemy do konsoli, żeby wiedzieć, co testujemy
-  console.log(`VU ${__VU} odwiedza: ${randomEndpoint}`);
+    // KROK 1: Logowanie
+    group('01_User_Login', function () {
+        const loginUrl = `${BASE_URL}/api/login`;
+        
+        const payload = JSON.stringify({
+            username: userData.user,
+            password: userData.password,
+        });
 
-  // Wykonujemy zapytanie do aplikacji z wąskim gardłem
-  const res = http.get(currentUrl);
+        const params = {
+            headers: { 'Content-Type': 'application/json' },
+            tags: { name: 'Login' }
+        };
 
-  // 4. ASERCJE (CHECKS)
-  check(res, {
-    'status is 200': (r) => r.status === 200,
-  });
+        const res = http.post(loginUrl, payload, params);
 
-  // Losowy czas myślenia (pacing) - 1-3 sekundy
-  sleep(randomSleep(1, 3));
+        check(res, {
+            'Login Status 200': (r) => r.status === 200,
+            'Token received': (r) => r.json('token') !== undefined,
+        });
+
+        // Wyciągamy token z odpowiedzi
+        try {
+            authToken = res.json('token');
+        } catch (e) {
+            authToken = null;
+        }
+        
+        sleep(randomSleep(1, 2));
+    });
+
+    // KROK 2: Użycie Tokena
+    group('02_Slow_Endpoint', function () {
+        if (!authToken) {
+            console.log(`VU ${__VU} - Brak tokena, pomijam krok 2`);
+            return;
+        }
+
+        const slowUrl = `${BASE_URL}/api/slow`;
+        const params = {
+            headers: { 'Authorization': `Bearer ${authToken}` },
+            tags: { name: 'Slow_Endpoint' }
+        };
+
+        const res = http.get(slowUrl, params);
+
+        check(res, {
+            'Slow Status 200': (r) => r.status === 200,
+        });
+
+        sleep(randomSleep(1, 3));
+    });
 }
