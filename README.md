@@ -6,14 +6,16 @@ Repozytorium przedstawia kompletny, zautomatyzowany cykl testowania wydajności,
 
 ## 🛠️ Architektura i Stack
 
-Projekt jest zbudowany z naciskiem na modułowość, skalowalność i łatwą integrację z potokami CI/CD.
+Projekt jest zbudowany z naciskiem na modułowość, skalowalność i pełną obserwowalność.
 
-| Kategoria | Narzędzia / Technologie |
-| :--- | :--- |
-| **Generator Obciążenia** | **k6** (JavaScript ES6) |
-| **Automatyzacja (CI/CD)** | **GitHub Actions** (YAML) |
-| **Kontrola Wersji** | Git / GitHub |
-| **Język** | JavaScript (ES6) |
+| Kategoria | Narzędzia / Technologie | Rola w Projekcie |
+| :--- | :--- | :--- |
+| **Generator Obciążenia** | **k6** (JavaScript ES6) | Definicja zaawansowanych scenariuszy i Quality Gate. |
+| **Aplikacja Docelowa** | Node.js (Express) | Symulowany cel testów (zawiera celowe wąskie gardło). |
+| **Automatyzacja (CI/CD)** | **GitHub Actions** (YAML) | Uruchamianie testów dymnych po każdym `git push` (Shift-Left). |
+| **APM & RCA** | **Elastic APM Stack** | Zbieranie śladów i metryk na poziomie kodu (diagnostyka). |
+| **Monitoring Live** | **Grafana + InfluxDB** | Wizualizacja wyników testów obciążeniowych w czasie rzeczywistym. |
+| **Konteneryzacja** | **Docker Compose** | Łatwe i powtarzalne uruchamianie środowisk APM/Monitoringu. |
 
 ### Struktura Katalogów
 
@@ -29,6 +31,11 @@ Projekt jest zbudowany z naciskiem na modułowość, skalowalność i łatwą in
 
 Testy mogą być uruchamiane bezpośrednio z terminala przy użyciu lokalnej instalacji k6.
 
+Uruchom API, które będzie celem testów.
+
+'cd target-api'
+'npm start'
+
 | Akcja | Komenda |
 | :--- | :--- |
 | **Z domyślnym URL** | `k6 run tests/smoke-test.js` |
@@ -41,6 +48,26 @@ Testy są w pełni zautomatyzowane. Nie jest wymagana żadna ręczna komenda, ab
 * **Trigger:** Test uruchamia się automatycznie po każdym `git push` do gałęzi `main`.
 * **Środowisko:** Test jest uruchamiany na runnerze GitHub Actions (maszyna wirtualna Ubuntu).
 * **Weryfikacja:** Wynik Joba (zielony/czerwony znacznik) jest widoczny w zakładce **Actions** na GitHubie.
+
+## 🎯 Kluczowe Funkcjonalności (Umiejętności Senior Performance Engineer)
+
+Ten projekt demonstruje praktyczną znajomość zaawansowanych kompetencji:
+
+### 1. Zaawansowana Symulacja Użytkownika (Korelacja Danych)
+
+* **Wdrożenie Testów Złożonych Transakcji:** Symulacja pełnej ścieżki użytkownika (User Journey), w tym Logowanie oraz Akcja Chroniona.
+* **Korelacja Danych (JWT Token):** Implementacja mechanizmu przechwytywania **Tokena JWT** z odpowiedzi JSON po logowaniu (`POST /api/login`) i używania go w nagłówku autoryzacyjnym (`Authorization: Bearer <token>`) w kolejnych żądaniach.
+* **Parametryzacja Danych:** Użycie **`SharedArray`** do ładowania danych logowania z CSV, zapewniając unikalność danych dla każdego Wirtualnego Użytkownika (`__VU`).
+
+### 2. Obserwowalność i Diagnostyka (APM & RCA)
+
+* **Real-Time Monitoring:** Integracja stacku **Grafana + InfluxDB** w Dockerze do tworzenia dynamicznych dashboardów. Umożliwia to natychmiastowe śledzenie krytycznych metryk (p95, błędy, przepustowość) podczas trwania testu.
+* **Root Cause Analysis (RCA):** Użycie **Elastic APM** (Kibana) do głębokiej analizy śladów (`traces`) aplikacji w trakcie obciążenia. Pozwala to na **dokładne zidentyfikowanie** wąskiego gardła na poziomie kodu (np. funkcja `simulateSlowDatabaseCall` generująca opóźnienie 1.5s).
+
+### 3. Automatyzacja i Quality Gate (CI/CD)
+
+* **Performance as Code:** Tworzenie modularnych i sparametryzowanych skryptów obciążeniowych za pomocą k6.
+* **Quality Gate Automation:** Ustanowienie automatycznej Bramki Jakości (**Thresholds k6**) w potoku **GitHub Actions**, która zatrzymuje wdrożenie (FAIL), gdy naruszone zostaną kryteria SLA (np. `p(95) < 500ms`).
 
 ## 🚦 Quality Gate (Bramka Jakości)
 

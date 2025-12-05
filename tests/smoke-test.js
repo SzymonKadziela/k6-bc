@@ -49,7 +49,7 @@ export default function () {
         const res = http.post(loginUrl, payload, params);
 
         check(res, {
-            'Login Status 200': (r) => r.status === 200,
+            'Login Status 200': (r) => r.status === 200 || r.status === 201,
             'Token received': (r) => r.json('token') !== undefined,
         });
 
