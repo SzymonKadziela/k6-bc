@@ -101,10 +101,10 @@ Projekt dowodzi praktycznej znajomości poniższych kluczowych kompetencji, typo
 * **Skalowanie Obciążenia:** Uruchomienie testu o wysokiej wolumenie (do 100+ VU) za pomocą **k6 Cloud (LaaS)**, demonstrując umiejętność konfiguracji testów rozproszonych.
 * **Zaawansowana Analiza:** Wykorzystanie panelu k6 Cloud do analizy trendów wydajnościowych i generowania raportów.
 
-===============================================
+===================================
 MAPA POŁĄCZEŃ I ZALEŻNOŚCI PROJEKTU
 (Performance Engineering Stack)
-===============================================
+===================================
 
 ### 1. Centralny Proces (Load Test Run)
 
