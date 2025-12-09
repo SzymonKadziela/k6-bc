@@ -100,3 +100,35 @@ Projekt dowodzi praktycznej znajomości poniższych kluczowych kompetencji, typo
 ### III. ☁️ Faza Skalowalności (LaaS)
 * **Skalowanie Obciążenia:** Uruchomienie testu o wysokiej wolumenie (do 100+ VU) za pomocą **k6 Cloud (LaaS)**, demonstrując umiejętność konfiguracji testów rozproszonych.
 * **Zaawansowana Analiza:** Wykorzystanie panelu k6 Cloud do analizy trendów wydajnościowych i generowania raportów.
+
+===============================================
+MAPA POŁĄCZEŃ I ZALEŻNOŚCI PROJEKTU
+(Performance Engineering Stack)
+===============================================
+
+### 1. Centralny Proces (Load Test Run)
+
+| Źródło                 | ->  | Cel                        | Protokół / Mechanizm         | Rola
+| ------------------------ | --- | -------------------------- | ---------------------------- | ----------------------------------------------------
+| K6 Test Engine           | ->  | Target API (Node.js)       | HTTP/S (POST, GET)           | Generowanie Obciążenia (Testowanie Funkcjonalne/Wydajnościowe).
+| K6 Test Engine           | ->  | InfluxDB                   | --out influxdb (Port 8086)   | Eksport Metryk w czasie rzeczywistym.
+| Target API               | ->  | APM Server                 | Elastic APM Agent            | Diagnostyka (Zbieranie Śladów/Traces).
+
+-----------------------------------------------
+
+### 2. Monitoring i Wizualizacja
+
+| Źródło                   | ->  | Cel                        | Protokół / Mechanizm         | Rola
+| -------------------------- | --- | -------------------------- | ---------------------------- | ----------------------------------------------------
+| InfluxDB                   | ->  | Grafana                    | Datasource Query             | Wizualizacja Metryk k6 (Dashboardy Live).
+| APM Server                 | ->  | Elasticsearch              | Indexing                     | Przechowywanie danych APM.
+| Elasticsearch              | ->  | Kibana                     | User Interface               | Analiza RCA (Przeglądanie Traces i Logów).
+
+-----------------------------------------------
+
+### 3. Kontrola i Automatyzacja
+
+| Źródło                   | ->  | Cel                        | Protokół / Mechanizm         | Rola
+| -------------------------- | --- | -------------------------- | ---------------------------- | ----------------------------------------------------
+| Git Push                   | ->  | GitHub Actions             | YAML Trigger                 | Automatyczny Start testów (CI/CD).
+| GitHub Actions             | ->  | K6 Test Engine             | Runner Environment           | Uruchomienie Quality Gate.
